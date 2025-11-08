@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { GTFSStop, GTFSData, GTFSStopTime, GTFSTrip, GTFSRoute } from './gtfs-parser.js';
+  import type { GTFSStop, GTFSData, GTFSStopTime, GTFSTrip, GTFSRoute, GTFSCalendar } from './gtfs-parser';
   import { createEventDispatcher } from 'svelte';
 
   export let stop: GTFSStop;
@@ -19,6 +19,7 @@
     routeId: string;
     hour: number;
     minute: number;
+    serviceId: string;
   }
 
   interface RouteGroup {
@@ -34,32 +35,110 @@
 
   let timetableEntries: TimetableEntry[] = [];
   let routeGroups: RouteGroup[] = [];
-  let selectedDate = new Date().toISOString().split('T')[0];
+  let selectedDate = new Date();
+  let selectedDateString = new Date().toISOString().split('T')[0];
   let sortBy: 'time' | 'route' = 'time';
   let selectedRouteId: string | null = null;
+  let selectedTrip: TimetableEntry | null = null;
+  let showTripDetail = false;
 
-  $: if (visible && stop && gtfsData) {
+  // Update selectedDate when selectedDateString changes
+  $: if (selectedDateString) {
+    selectedDate = new Date(selectedDateString + 'T00:00:00');
+  }
+
+  // Regenerate timetable when date changes
+  $: if (visible && stop && gtfsData && selectedDate) {
     generateTimetable();
   }
 
+  // Get active service IDs for the selected date
+  function getActiveServiceIds(date: Date): Set<string> {
+    const activeServiceIds = new Set<string>();
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const dateStr = formatDateForGTFS(date);
+
+    console.log('Getting active service IDs for date:', date, 'dateStr:', dateStr, 'dayOfWeek:', dayOfWeek);
+    console.log('Calendar entries:', gtfsData.calendar.length);
+    console.log('Calendar dates entries:', gtfsData.calendarDates.length);
+
+    // Check calendar.txt for regular service
+    for (const cal of gtfsData.calendar) {
+      const startDate = cal.start_date;
+      const endDate = cal.end_date;
+
+      // Check if date is within service period
+      if (dateStr >= startDate && dateStr <= endDate) {
+        // Check if service runs on this day of week
+        const dayFields = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayField = dayFields[dayOfWeek] as keyof GTFSCalendar;
+
+        if (cal[dayField] === '1') {
+          activeServiceIds.add(cal.service_id);
+        }
+      }
+    }
+
+    // Check calendar_dates.txt for exceptions
+    for (const calDate of gtfsData.calendarDates) {
+      if (calDate.date === dateStr) {
+        if (calDate.exception_type === '1') {
+          // Service added for this date
+          activeServiceIds.add(calDate.service_id);
+        } else if (calDate.exception_type === '2') {
+          // Service removed for this date
+          activeServiceIds.delete(calDate.service_id);
+        }
+      }
+    }
+
+    console.log('Active service IDs:', Array.from(activeServiceIds));
+    return activeServiceIds;
+  }
+
+  function formatDateForGTFS(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+  }
+
   function generateTimetable() {
+    // Get active service IDs for the selected date
+    const activeServiceIds = getActiveServiceIds(selectedDate);
+
     // Get all stop times for this stop
     const stopTimes = gtfsData.stopTimes.filter(st => st.stop_id === stop.stop_id);
-    
+    console.log('Total stop_times entries for this stop:', stopTimes.length);
+
     const entries: TimetableEntry[] = [];
-    
+    const seenTripIds = new Set<string>();
+    let filteredByServiceId = 0;
+
     for (const stopTime of stopTimes) {
+      // Skip duplicates
+      if (seenTripIds.has(stopTime.trip_id)) {
+        continue;
+      }
+
       // Find the trip
       const trip = gtfsData.trips.find(t => t.trip_id === stopTime.trip_id);
       if (!trip) continue;
-      
+
+      // Filter by service_id if calendar data is available
+      if (activeServiceIds.size > 0 && !activeServiceIds.has(trip.service_id)) {
+        filteredByServiceId++;
+        continue; // Skip trips that don't run on the selected date
+      }
+
       // Find the route
       const route = gtfsData.routes.find(r => r.route_id === trip.route_id);
       if (!route) continue;
-      
+
       const timeStr = stopTime.departure_time || stopTime.arrival_time;
       const [hours, minutes] = timeStr.split(':').map(Number);
-      
+
+      seenTripIds.add(stopTime.trip_id);
       entries.push({
         time: timeStr,
         tripId: stopTime.trip_id,
@@ -68,10 +147,17 @@
         routeColor: route.route_color,
         routeId: route.route_id,
         hour: hours,
-        minute: minutes
+        minute: minutes,
+        serviceId: trip.service_id
       });
     }
-    
+
+    console.log('=== Filtering Summary ===');
+    console.log('Total stop_times for this stop:', stopTimes.length);
+    console.log('Trips filtered by service_id:', filteredByServiceId);
+    console.log('Final entries displayed:', entries.length);
+    console.log('========================');
+
     timetableEntries = entries;
     generateRouteGroups();
   }
@@ -131,13 +217,6 @@
     return (hours % 24) * 3600 + minutes * 60 + (seconds || 0);
   }
 
-  function formatTime(timeStr: string): string {
-    const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours);
-    const displayHour = hour >= 24 ? hour - 24 : hour;
-    return `${displayHour.toString().padStart(2, '0')}:${minutes}`;
-  }
-
   function getTimeStatus(timeStr: string): 'past' | 'current' | 'future' {
     const now = new Date();
     const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
@@ -177,23 +256,6 @@
       </div>
       
       <div class="modal-body">
-        <div class="stop-info">
-          <div class="info-item">
-            <span class="label">停留所ID:</span>
-            <span class="value">{stop.stop_id}</span>
-          </div>
-          {#if stop.stop_code}
-            <div class="info-item">
-              <span class="label">停留所コード:</span>
-              <span class="value">{stop.stop_code}</span>
-            </div>
-          {/if}
-          <div class="info-item">
-            <span class="label">座標:</span>
-            <span class="value">{stop.stop_lat}, {stop.stop_lon}</span>
-          </div>
-        </div>
-
         <div class="controls">
           <div class="route-tabs">
             <button 

@@ -48,11 +48,32 @@ export interface GTFSRoute {
   route_text_color?: string;
 }
 
+export interface GTFSCalendar {
+  service_id: string;
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface GTFSCalendarDate {
+  service_id: string;
+  date: string;
+  exception_type: string; // 1 = service added, 2 = service removed
+}
+
 export interface GTFSData {
   stops: GTFSStop[];
   stopTimes: GTFSStopTime[];
   trips: GTFSTrip[];
   routes: GTFSRoute[];
+  calendar: GTFSCalendar[];
+  calendarDates: GTFSCalendarDate[];
 }
 
 export async function parseGTFSZip(file: File): Promise<GTFSData> {
@@ -96,21 +117,23 @@ async function extractGTFSDataFromZip(zipData: Uint8Array): Promise<GTFSData> {
       stops: [],
       stopTimes: [],
       trips: [],
-      routes: []
+      routes: [],
+      calendar: [],
+      calendarDates: []
     };
-    
-    // Parse required files
-    for (const fileName of ['stops.txt', 'stop_times.txt', 'trips.txt', 'routes.txt']) {
+
+    // Parse required and optional files
+    for (const fileName of ['stops.txt', 'stop_times.txt', 'trips.txt', 'routes.txt', 'calendar.txt', 'calendar_dates.txt']) {
       const file = files.find(f => f.name === fileName);
       if (!file) {
         console.warn(`${fileName} not found in ZIP file`);
         continue;
       }
-      
+
       console.log(`Extracting ${fileName}...`);
       const content = await extractFileFromZip(zipData, file);
       const csvContent = new TextDecoder('utf-8').decode(content);
-      
+
       switch (fileName) {
         case 'stops.txt':
           result.stops = parseCSVContent<GTFSStop>(csvContent);
@@ -127,6 +150,14 @@ async function extractGTFSDataFromZip(zipData: Uint8Array): Promise<GTFSData> {
         case 'routes.txt':
           result.routes = parseCSVContent<GTFSRoute>(csvContent);
           console.log('Parsed routes count:', result.routes.length);
+          break;
+        case 'calendar.txt':
+          result.calendar = parseCSVContent<GTFSCalendar>(csvContent);
+          console.log('Parsed calendar count:', result.calendar.length);
+          break;
+        case 'calendar_dates.txt':
+          result.calendarDates = parseCSVContent<GTFSCalendarDate>(csvContent);
+          console.log('Parsed calendar dates count:', result.calendarDates.length);
           break;
       }
     }
