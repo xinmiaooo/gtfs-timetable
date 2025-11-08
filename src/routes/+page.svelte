@@ -3,8 +3,9 @@
   import GTFSDropZone from '$lib/GTFSDropZone.svelte';
   import StopsList from '$lib/StopsList.svelte';
   import TimetableModal from '$lib/TimetableModal.svelte';
-  import type { GTFSRepository } from '$lib/gtfs-repos.js';
-  import type { GTFSStop, GTFSData } from '$lib/gtfs-parser.js';
+  import MapView from '$lib/MapView.svelte';
+  import type { GTFSRepository } from '$lib/gtfs-repos.ts';
+  import type { GTFSStop, GTFSData } from '$lib/gtfs-parser.ts';
   import { parseGTFSZip } from '$lib/gtfs-parser.js';
 
   let selectedRepository: GTFSRepository | null = null;
@@ -78,11 +79,11 @@
     <GTFSDropZone on:fileDropped={handleFileDropped} />
   </div>
 
-  {#if uploadedFile}
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-      <h2 class="text-lg font-semibold text-green-900 mb-2">アップロード完了</h2>
-      <p class="text-green-800">ファイル: {uploadedFile.name}</p>
-      <p class="text-sm text-green-600 mt-2">ファイルサイズ: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+
+  {#if gtfsData && gtfsData.stops.length > 0}
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">ルートと停留所の地図</h2>
+      <MapView {gtfsData} />
     </div>
   {/if}
 
@@ -99,3 +100,4 @@
     on:close={handleCloseTimetable} 
   />
 {/if}
+
