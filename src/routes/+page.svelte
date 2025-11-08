@@ -13,6 +13,7 @@
 	let uploadedFile: File | null = null;
 	let showTimetableModal = false;
 	let selectedStop: GTFSStop | null = null;
+	let showDropZone = true;
 
 	function handleRepositorySelect(event: CustomEvent<GTFSRepository>) {
 		selectedRepository = event.detail;
@@ -23,6 +24,7 @@
 		const file = event.detail;
 		uploadedFile = file;
 		loading = true;
+		showDropZone = false; // Hide the drop zone after file is selected
 
 		try {
 			console.log('Processing file:', file.name);
@@ -36,9 +38,10 @@
 			});
 		} catch (error) {
 			console.error('Error processing file:', error);
-			alert('ファイルの処理中にエラーが発生しました: ' + error);
+			alert('Error processing file: ' + error);
 			stops = [];
 			gtfsData = null;
+			showDropZone = true; // Show the drop zone again if there's an error
 		} finally {
 			loading = false;
 		}
@@ -61,35 +64,19 @@
 	}
 </script>
 
-<div class="container mx-auto px-4 py-8">
-	<h1 class="mb-8 text-3xl font-bold">GTFS Timetable</h1>
+<svelte:head>
+	<title>GTFS Timetable Viewer</title>
+	<meta name="description" content="Browser-based GTFS data visualization tool" />
+</svelte:head>
 
-	<!-- <div class="mb-8">
-    <h2 class="text-xl font-semibold mb-4">オンラインリポジトリから選択</h2>
-    <GTFSSelector on:select={handleRepositorySelect} />
-  </div> -->
+<div class="app-container">
+	<h1 class="app-title">GTFS Timetable Viewer</h1>
 
-	{#if selectedRepository}
-		<div class="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
-			<h2 class="mb-2 text-lg font-semibold text-blue-900">選択されたリポジトリ</h2>
-			<p class="text-blue-800">{selectedRepository.name} が選択されました。</p>
-			<p class="mt-2 text-sm text-blue-600">
-				今後、このリポジトリから時刻表データを取得して表示する機能を追加できます。
-			</p>
-		</div>
-	{/if}
-
-	<div class="mb-8">
-		<h2 class="mb-4 text-xl font-semibold">ローカルファイルをアップロード</h2>
-		<GTFSDropZone on:fileDropped={handleFileDropped} />
+	<div class="map-wrapper">
+		<MapView {gtfsData} onStopClick={handleStopClickFromMap} />
 	</div>
 
-	{#if gtfsData && gtfsData.stops.length > 0}
-		<div class="mb-8">
-			<h2 class="mb-4 text-xl font-semibold">ルートと停留所の地図</h2>
-			<MapView {gtfsData} onStopClick={handleStopClickFromMap} />
-		</div>
-	{/if}
+	<GTFSDropZone visible={showDropZone} on:fileDropped={handleFileDropped} />
 </div>
 
 {#if showTimetableModal && selectedStop && gtfsData}
@@ -100,3 +87,31 @@
 		on:close={handleCloseTimetable}
 	/>
 {/if}
+
+<style>
+	.app-container {
+		width: 100%;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.app-title {
+		padding: 1rem 2rem;
+		margin: 0;
+		font-size: 1.5rem;
+		font-weight: 700;
+		background: white;
+		border-bottom: 1px solid #e5e7eb;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		position: relative;
+		z-index: 1001;
+	}
+
+	.map-wrapper {
+		flex: 1;
+		position: relative;
+		overflow: hidden;
+	}
+</style>

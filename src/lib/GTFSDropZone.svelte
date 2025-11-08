@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
+  export let visible = true;
+
   const dispatch = createEventDispatcher<{
     fileDropped: File;
   }>();
@@ -21,14 +23,13 @@
   function handleDrop(event: DragEvent) {
     event.preventDefault();
     isDragOver = false;
-    
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type === 'application/zip' || file.name.endsWith('.zip')) {
         dispatch('fileDropped', file);
       } else {
-        alert('ZIPファイルをドロップしてください');
+        alert('Please drop a ZIP file');
       }
     }
   }
@@ -46,48 +47,85 @@
   }
 </script>
 
-<div class="gtfs-drop-zone">
-  <div 
-    class="drop-area {isDragOver ? 'drag-over' : ''}"
-    on:dragover={handleDragOver}
-    on:dragleave={handleDragLeave}
-    on:drop={handleDrop}
-    role="button"
-    tabindex="0"
-    on:click={triggerFileInput}
-    on:keydown={(e) => e.key === 'Enter' && triggerFileInput()}
-  >
-    <div class="drop-content">
-      <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7,10 12,15 17,10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      <p class="main-text">GTFS ZIPファイルをドロップするか、クリックして選択</p>
-      <p class="sub-text">stops.txt を含むGTFSデータセットを選択してください</p>
+{#if visible}
+  <div class="modal-overlay" on:click|self={() => {}}>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <h2 class="modal-title">Upload GTFS Data</h2>
+
+        <div
+          class="drop-area {isDragOver ? 'drag-over' : ''}"
+          on:dragover={handleDragOver}
+          on:dragleave={handleDragLeave}
+          on:drop={handleDrop}
+          role="button"
+          tabindex="0"
+          on:click={triggerFileInput}
+          on:keydown={(e) => e.key === 'Enter' && triggerFileInput()}
+        >
+          <div class="drop-content">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <p class="main-text">Drop GTFS ZIP file here or click to select</p>
+            <p class="sub-text">Select a GTFS dataset containing stops.txt</p>
+          </div>
+        </div>
+
+        <input
+          bind:this={fileInput}
+          type="file"
+          accept=".zip"
+          on:change={handleFileInput}
+          style="display: none;"
+        />
+      </div>
     </div>
   </div>
-  
-  <input
-    bind:this={fileInput}
-    type="file"
-    accept=".zip"
-    on:change={handleFileInput}
-    style="display: none;"
-  />
-</div>
+{/if}
 
 <style>
-  .gtfs-drop-zone {
-    width: 100%;
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-dialog {
     max-width: 600px;
-    margin: 0 auto;
+    width: 90%;
+    margin: 1rem;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
   }
 
   .drop-area {
-    border: 2px dashed #d1d5db;
-    border-radius: 8px;
-    padding: 2rem;
+    border: 3px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 3rem 2rem;
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -113,8 +151,8 @@
   }
 
   .upload-icon {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     color: #6b7280;
   }
 
