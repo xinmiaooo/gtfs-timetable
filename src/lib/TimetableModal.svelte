@@ -249,7 +249,7 @@
   <div class="modal-overlay" on:click={close} role="presentation">
     <div class="modal-content" on:click|stopPropagation role="dialog" aria-modal="true">
       <div class="modal-header">
-        <h2 class="modal-title">Timetable for {stop.stop_name}</h2>
+        <h2 class="modal-title">{stop.stop_name}</h2>
         <button class="close-button" on:click={close} aria-label="Close">
           ✕
         </button>
