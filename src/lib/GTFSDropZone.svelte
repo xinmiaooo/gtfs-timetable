@@ -70,7 +70,6 @@
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
             <p class="main-text">Drop GTFS ZIP file here or click to select</p>
-            <p class="sub-text">Select a GTFS dataset containing stops.txt</p>
           </div>
         </div>
 

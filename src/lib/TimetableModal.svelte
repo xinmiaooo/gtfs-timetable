@@ -142,7 +142,7 @@
       entries.push({
         time: timeStr,
         tripId: stopTime.trip_id,
-        headsign: stopTime.stop_headsign || trip.trip_headsign || '方向不明',
+        headsign: stopTime.stop_headsign || trip.trip_headsign || 'Direction Unknown',
         routeName: route.route_short_name || route.route_long_name || route.route_id,
         routeColor: route.route_color,
         routeId: route.route_id,
@@ -249,8 +249,8 @@
   <div class="modal-overlay" on:click={close} role="presentation">
     <div class="modal-content" on:click|stopPropagation role="dialog" aria-modal="true">
       <div class="modal-header">
-        <h2 class="modal-title">{stop.stop_name} の時刻表</h2>
-        <button class="close-button" on:click={close} aria-label="閉じる">
+        <h2 class="modal-title">Timetable for {stop.stop_name}</h2>
+        <button class="close-button" on:click={close} aria-label="Close">
           ✕
         </button>
       </div>
@@ -262,7 +262,7 @@
               class="route-tab {selectedRouteId === null ? 'active' : ''}" 
               on:click={() => selectRoute(null)}
             >
-              全ての路線
+              All Routes
             </button>
             {#each routeGroups as group}
               <button 
@@ -276,7 +276,7 @@
                 >
                   {group.route.route_short_name || group.route.route_long_name || group.route.route_id}
                 </span>
-                <span class="trip-count">({group.entries.length}便)</span>
+                <span class="trip-count">({group.entries.length} trips)</span>
               </button>
             {/each}
           </div>
@@ -298,14 +298,14 @@
                     <span class="route-description">
                       {group.route.route_long_name || group.route.route_desc || ''}
                     </span>
-                    <span class="trip-count">({group.entries.length}便)</span>
+                    <span class="trip-count">({group.entries.length} trips)</span>
                   </div>
                   
                   <table class="hourly-timetable">
                     <thead>
                       <tr>
-                        <th class="hour-column">時</th>
-                        <th class="minutes-column">分</th>
+                        <th class="hour-column">Hour</th>
+                        <th class="minutes-column">Minute</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -317,7 +317,7 @@
                               {#each hourGroup.entries as entry}
                                 <span 
                                   class="minute-item {getTimeStatus(entry.time)}"
-                                  title="{entry.headsign} (便ID: {entry.tripId})"
+                                  title="{entry.headsign} (Trip ID: {entry.tripId})"
                                 >
                                   {entry.minute.toString().padStart(2, '0')}
                                 </span>
@@ -332,7 +332,7 @@
               {/each}
             {:else}
               <div class="no-data">
-                <p>この停留所の時刻表データが見つかりませんでした。</p>
+                <p>No timetable data found for this stop.</p>
               </div>
             {/if}
           {:else}
@@ -350,14 +350,14 @@
                     <span class="route-description">
                       {group.route.route_long_name || group.route.route_desc || ''}
                     </span>
-                    <span class="trip-count">({group.entries.length}便)</span>
+                    <span class="trip-count">({group.entries.length} trips)</span>
                   </div>
                   
                   <table class="hourly-timetable">
                     <thead>
                       <tr>
-                        <th class="hour-column">時</th>
-                        <th class="minutes-column">分</th>
+                        <th class="hour-column">Hour</th>
+                        <th class="minutes-column">Minute</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -369,7 +369,7 @@
                               {#each hourGroup.entries as entry}
                                 <span 
                                   class="minute-item {getTimeStatus(entry.time)}"
-                                  title="{entry.headsign} (便ID: {entry.tripId})"
+                                  title="{entry.headsign} (Trip ID: {entry.tripId})"
                                 >
                                   {entry.minute.toString().padStart(2, '0')}
                                 </span>
