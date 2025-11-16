@@ -99,12 +99,6 @@ export async function parseGTFSZip(file: File): Promise<GTFSData> {
   }
 }
 
-// Backward compatibility function
-export async function parseGTFSZipForStops(file: File): Promise<GTFSStop[]> {
-  const data = await parseGTFSZip(file);
-  return data.stops;
-}
-
 async function extractGTFSDataFromZip(zipData: Uint8Array): Promise<GTFSData> {
   try {
     console.log('Parsing ZIP structure...');
@@ -170,12 +164,6 @@ async function extractGTFSDataFromZip(zipData: Uint8Array): Promise<GTFSData> {
     console.error('Error stack:', error?.stack);
     throw new Error(`ZIPファイルからGTFSデータの抽出に失敗しました: ${error?.message || 'Unknown error'}`);
   }
-}
-
-// Legacy function for backward compatibility
-async function extractStopsFromZip(zipData: Uint8Array): Promise<GTFSStop[]> {
-  const gtfsData = await extractGTFSDataFromZip(zipData);
-  return gtfsData.stops;
 }
 
 interface ZipFileEntry {

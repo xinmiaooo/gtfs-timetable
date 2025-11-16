@@ -2,11 +2,9 @@
 	import GTFSDropZone from '$lib/GTFSDropZone.svelte';
 	import TimetableModal from '$lib/TimetableModal.svelte';
 	import MapView from '$lib/MapView.svelte';
-	import type { GTFSRepository } from '$lib/gtfs-repos.ts';
 	import type { GTFSStop, GTFSData } from '$lib/gtfs-parser.ts';
 	import { parseGTFSZip } from '$lib/gtfs-parser.js';
 
-	let selectedRepository: GTFSRepository | null = null;
 	let stops: GTFSStop[] = [];
 	let gtfsData: GTFSData | null = null;
 	let loading = false;
@@ -14,11 +12,6 @@
 	let showTimetableModal = false;
 	let selectedStop: GTFSStop | null = null;
 	let showDropZone = true;
-
-	function handleRepositorySelect(event: CustomEvent<GTFSRepository>) {
-		selectedRepository = event.detail;
-		console.log('Selected repository:', selectedRepository);
-	}
 
 	async function handleFileDropped(event: CustomEvent<File>) {
 		const file = event.detail;

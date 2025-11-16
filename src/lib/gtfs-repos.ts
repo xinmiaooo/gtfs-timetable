@@ -11,43 +11,35 @@ export const gtfsRepositories: GTFSRepository[] = [
     id: 'jr-east',
     name: 'JR East',
     url: 'https://www.jreast-timetable.jp/timetable_api/gtfs/Tohoku_GTFS.zip',
-    description: 'JRqå,nB;hÇü¿',
+    description: 'JRqï¿½,nB;hï¿½ï¿½ï¿½',
     region: 'Japan'
   },
   {
     id: 'jr-west',
     name: 'JR West',
     url: 'https://www.jr-odekake.net/railroad/service/gtfs/gtfs.zip',
-    description: 'JRå,nB;hÇü¿',
+    description: 'JRï¿½,nB;hï¿½ï¿½ï¿½',
     region: 'Japan'
   },
   {
     id: 'tokyo-metro',
     name: 'Tokyo Metro',
     url: 'https://api.tokyometroapp.jp/api/v2/gtfs/TokyoMetro_GTFS.zip',
-    description: 'q¬áÈínB;hÇü¿',
+    description: 'qï¿½ï¿½ï¿½ï¿½nB;hï¿½ï¿½ï¿½',
     region: 'Japan'
   },
   {
     id: 'odpt',
     name: 'Open Data Platform for Public Transportation',
     url: 'https://api.odpt.org/api/v4/gtfs/odpt_gtfs.zip',
-    description: 'lq¤ªü×óÇü¿»ó¿ünGTFSÇü¿',
+    description: 'lqï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½nGTFSï¿½ï¿½ï¿½',
     region: 'Japan'
   },
   {
     id: 'sample',
     name: 'Sample GTFS',
     url: 'https://developers.google.com/transit/gtfs/examples/sample-feed.zip',
-    description: 'Google Transit APInµó×ëÇü¿',
+    description: 'Google Transit APInï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
     region: 'Sample'
   }
 ];
-
-export function getGTFSRepositories(): GTFSRepository[] {
-  return gtfsRepositories;
-}
-
-export function getGTFSRepositoryById(id: string): GTFSRepository | undefined {
-  return gtfsRepositories.find(repo => repo.id === id);
-}
